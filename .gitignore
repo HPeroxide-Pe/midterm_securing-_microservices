@@ -1,0 +1,8 @@
+node_modules/
+micro-gate/node_modules/
+jwt-token.json
+localhost.cert
+localhost.key
+.env
+cert.pem
+key.pem

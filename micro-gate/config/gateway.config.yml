@@ -1,0 +1,59 @@
+http:
+  port: 8080
+admin:
+  port: 9876
+  host: localhost
+apiEndpoints:
+  # see: http://www.express-gateway.io/docs/configuration/gateway.config.yml/apiEndpoints
+  order_service_api:
+    host: localhost
+    paths: ['/orders','/orders/*']
+  customer_service_api:
+    host: localhost
+    paths: ['/customers','/customers/*']
+  product_service_api:
+    host: localhost
+    paths: ['/products','/products/*']
+serviceEndpoints:
+  # see: http://www.express-gateway.io/docs/configuration/gateway.config.yml/serviceEndpoints
+  order_service:
+    url: "http://localhost:3003"
+  customer_service:
+    url: "http://localhost:3002"
+  product_service:
+    url: "http://localhost:3001"
+policies:
+  - basic-auth
+  - cors
+  - expression
+  - key-auth
+  - log
+  - oauth2
+  - proxy
+  - rate-limit
+pipelines:
+  # see: https://www.express-gateway.io/docs/configuration/gateway.config.yml/pipelines
+  order_service_line:
+    apiEndpoints:
+      - order_service_api
+    policies:
+      - proxy:
+          action:
+            serviceEndpoint: order_service
+            changeOrigin: true
+  customer_service_line:
+    apiEndpoints:
+      - customer_service_api
+    policies:
+      - proxy:
+          action:
+            serviceEndpoint: customer_service
+            changeOrigin: true
+  product_service_line:
+    apiEndpoints:
+      - product_service_api
+    policies:
+      - proxy:
+          action:
+            serviceEndpoint: product_service
+            changeOrigin: true
