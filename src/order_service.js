@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const axios = require('axios');
 const jwt = require("jsonwebtoken");
+const rateLimit = require("express-rate-limit"); // Add rate limiting for security
 const secret = require("../jwt-token.json");
 // const https = require("https");
 // const fs = require("fs");
@@ -14,113 +15,112 @@ const secret = require("../jwt-token.json");
 
 app.use(express.json());
 
+// URL of customer and product services
 const customerURL = 'http://localhost:3002/customers';
 const productURL = 'http://localhost:3001/products';
-let orderIdCounter = 0; // global order counter for id
-const dataBank = []; // we have db at home
-let JWT = '';
-//create a new order
-app.post("/orders", verifyJWT, verifyRole(["user"]),(req, res) => {
-  let orderId = orderIdCounter++;
-  // let customerData;
-  // let productData;
-  const customerId = req.user.id;
-  const productId = req.body.productId;
-  console.log(req.user.id);
-  axios.get(`${customerURL}/${customerId}`, {headers: {"Authorization": `${req.headers.authorization}`}}).then((response) => { //Get request for customer service
-    console.log('customer found', /*response.data //this is to check the response*/);
-    let customerData = response.data;
 
-    axios.get(`${productURL}/${productId}`, {
-      headers: {
-        "Authorization": `${req.headers.authorization}`
-      }
-    }).then((response) => {
-      console.log('product found', /*response.data //this is to check the response*/);
-      let productData = response.data;
-      try{
-        const order = {
-          orderId : orderId,
+let orderIdCounter = 0; // global order counter for id
+const dataBank = []; // mock database for orders
+
+//let JWT = '';
+
+// Rate Limiting: Prevent brute-force attacks
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again later."
+});
+app.use(apiLimiter);
+
+// Create a new order (Protected route)
+app.post("/orders", verifyJWT, verifyRole(["user"]), async (req, res) => {
+  const customerId = req.user.id;
+  const { productId, quantity } = req.body;
+
+  if (!productId || !quantity || quantity <= 0) {
+      return res.status(400).send("Invalid product or quantity.");
+  }
+
+  try {
+      // Fetch customer details
+      const customerResponse = await axios.get(`${customerURL}/${customerId}`, {
+          headers: { "Authorization": `${req.headers.authorization}` }
+      });
+      const customerData = customerResponse.data;
+
+      // Fetch product details
+      const productResponse = await axios.get(`${productURL}/${productId}`, {
+          headers: { "Authorization": `${req.headers.authorization}` }
+      });
+      const productData = productResponse.data;
+
+      // Create a new order
+      const order = {
+          orderId: orderIdCounter++,
           customerId: customerData.customerId,
           productId: productData.productId,
           customerName: customerData.name,
           customerAddress: customerData.address,
-          quantity: req.body.quantity,
-          totalPrice: productData.price * req.body.quantity
-        };
-        dataBank.push(order);
-        console.log("order created");//testing, pls remove in final
-        res.json(order).status(201);
-      }catch{
-        console.log("order not created"); //testing, pls remove in final
-        res.json(500)
-      }
-    }).catch((error) => {
-      console.log('product not found', /*error*/ ); //testing, pls remove in final
-      res.status(404).send('product not found');
-    });
-  }).catch((error) => {
-    console.log('customer not found', error); //testing, pls remove in final
-    res.status(404).send('customer not found');
-  });
-  
+          quantity: quantity,
+          totalPrice: productData.price * quantity
+      };
+
+      dataBank.push(order);
+      console.log("Order created:", order.orderId);
+      res.status(201).json(order);
+  } catch (error) {
+      console.error("Error creating order:", error.message);
+      res.status(500).send("Failed to create order. Please check customer/product details.");
+  }
 });
 
-
-//get an order
+// Get an order by ID (Protected, admin role only)
 app.get("/orders/:orderId", verifyJWT, verifyRole(["admin"]), (req, res) => {
-  const order = dataBank[req.params.orderId]
-  if(!order){ //checks if an order isn't found
-    return res.status(404).send("order not found");
-  }if (order){
-    return res.json(order);
+  const order = dataBank[parseInt(req.params.orderId)];
+
+  if (!order) { //checks if an order isn't found
+      return res.status(404).send("Order not found.");
   }
+
+  res.json(order);
 });
 
-//update an order
+// Update an order (Protected, admin role only)
 app.put("/orders/:orderId", verifyJWT, verifyRole(["admin"]), (req, res) => {
-  let order = dataBank[req.params.orderId]
-  if(!order){ //checks if an order isn't found
-    return res.status(404).send("order not found");
-  }else{
-    const {orderId, customerId, productID, customerName, customerAddress, quantity} = req.body;
-    //failsafe for if the json in the PUT request is missing some fields.
-    //might add a change for customer and product id, which might need another bunch of axios code, maybe later if naay time
-    if(typeof orderId !== "undefined") order.orderId = parseInt(orderId);
-    if(typeof customerId !== "undefined") order.customerId = parseInt(customerId);
-    if(typeof productID !== "undefined") order.productID = parseInt(productID);
-    if(typeof customerName !== "undefined") order.customerName = toString(customerName);
-    if(typeof customerAddress !== "undefined") order.customerAddress = toString(customerAddress);
-    if(typeof quantity !== "undefined") order.quantity = quantity;
+  const order = dataBank[parseInt(req.params.orderId)];
 
-    dataBank[req.params.orderId] = order
-    res.json(order);
+  if (!order) {
+      return res.status(404).send("Order not found.");
   }
+
+  const { productId, quantity } = req.body;
+
+  if (productId) order.productId = productId;
+  if (quantity && quantity > 0) order.quantity = quantity;
+
+  res.json(order);
 });
 
-//delete an order
+// Delete an order (Protected, admin role only)
 app.delete("/orders/:orderId", verifyJWT, verifyRole(["admin"]), (req, res) => {
-  let order = dataBank[req.params.orderId];
-  if(!order){ //checks if an order isn't found
-    res.status(404).send("order not found");
-  }else{
-    dataBank.splice(req.params.orderId, 1);// removes orderID
-    orderIdCounter--;// reduces global counter for orderID
-    //goes from current index to the end of the list to change the orderId 
-    //might remove later
-    for(let i = req.params.orderId; i < dataBank.length; i++){
-      dataBank[i].orderId = parseInt(i);
-      //console.log('changed index ' + i); //used for testing, pls remove on final
-    }
-    res.send("order deleted");
+  const orderIndex = parseInt(req.params.orderId);
+  const order = dataBank[orderIndex];
+
+  if (!order) {
+      return res.status(404).send("Order not found.");
   }
+
+  dataBank.splice(orderIndex, 1); // Remove the order
+  console.log("Order deleted:", orderIndex);
+  res.send("Order deleted.");
 });
 
+// JWT verification middleware
 function verifyJWT(req, res, next) {
-  const authHeaders = req.headers["authorization"];
-  const token = authHeaders && authHeaders.split(' ')[1];
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(' ')[1];
 
-  if (token == null) return res.sendStatus(401);
+  if (!token) return res.sendStatus(401);
 
   jwt.verify(token, secret.secret, (err, user) => {
       if (err) return res.sendStatus(403);
@@ -129,6 +129,7 @@ function verifyJWT(req, res, next) {
   });
 }
 
+// Role verification middleware
 function verifyRole(allowedRoles) {
   return (req, res, next) => {
       const user = req.user;
@@ -136,10 +137,25 @@ function verifyRole(allowedRoles) {
           return res.sendStatus(403);
       }
       next();
-      
-  }
+  };
 }
+
 app.listen(3003, () => console.log("Order service listening on port 3003!"));
+
+// To use HTTPS, uncomment and configure with valid certificates
+/*
+const https = require("https");
+const fs = require("fs");
+const sslOptions = {
+    key: fs.readFileSync("../localhost.key"),
+    cert: fs.readFileSync("../localhost.cert")
+};
+
+https.createServer(sslOptions, app).listen(3003, () => {
+    console.log('Secure server running on https://localhost:3003');
+});
+*/
+
 // https.createServer(sslOptions, app).listen(3003, () => {
 //   console.log('Local server running on https://localhost');
 // }); //getting [EG:policy] warn: self-signed certificate; cannot proceed
