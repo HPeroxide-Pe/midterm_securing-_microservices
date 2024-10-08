@@ -1,19 +1,39 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const secret = require("../jwt-token.json");
+const rateLimit = require("express-rate-limit"); // Add rate limiting for security
 const app = express();
 app.use(express.json());
 
 let customerIdCounter = 0; // global customer counter for id
 const customerDB = []; // simple array acting as the customer database
 
+// Rate Limiting: Prevent brute-force attacks
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: "Too many requests from this IP, please try again later."
+});
+app.use(apiLimiter);
+
+// Input validation utility
+const validateCustomer = (name, email, address, role, password) => {
+    if (!name || !email || !address || !role || !password) {
+        return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Simple email format check
+    if (!emailRegex.test(email)) return false;
+    return true;
+};
+
 // Create a new customer/register
 app.post("/customers", (req, res) => {
-    const { name, email, address, role, password} = req.body;
+    const { name, email, address, role, password } = req.body;
     let customerId = customerIdCounter++;
-    console.log(customerId);
-    if (!name || !email || !address || !role || !password) {
-        return res.status(400).send("Missing customer details.");
+    
+    // Input validation
+    if (!validateCustomer(name, email, address, role, password)) {
+        return res.status(400).send("Invalid or missing customer details.");
     }
 
     try {
@@ -27,34 +47,35 @@ app.post("/customers", (req, res) => {
         };
 
         customerDB.push(customer);
-        console.log("Customer created"); // testing, remove for final
+        console.log("Customer created: ", customerId);
         res.status(201).json(customer);
     } catch (err) {
-        console.error("Customer not created", err); // testing, remove for final
+        console.error("Error creating customer:", err);
         res.status(500).send("Internal server error");
     }
 });
 
-// Login 
+// Login
 app.post("/customers/login", (req, res) => {
-    const { name, pass }   = req.body;
+    const { name, pass } = req.body;
 
-    customer = customerDB.find(customer => customer.name == name);
-    if(!customer ||  customer.pass != pass) return res.status(401).send("INVALID USER");
+    if (!name || !pass) return res.status(400).send("Missing username or password.");
+
+    const customer = customerDB.find(customer => customer.name == name);
+    if (!customer || customer.password != pass) return res.status(401).send("Invalid credentials.");
 
     const payload = {
         id: customer.customerId,
         role: customer.role
     };
-    const token = jwt.sign(payload, secret.secret);
+    const token = jwt.sign(payload, secret.secret, { expiresIn: '1h' });
 
-    res.json ({ token, customer});
-})
+    res.json({ token, customer });
+});
 
-
-// Get customer details by ID
+// Get customer details by ID (Protected route)
 app.get("/customers/:customerId", verifyJWT, (req, res) => {
-    const customer = customerDB[req.params.customerId];
+    const customer = customerDB[parseInt(req.params.customerId)];
 
     if (!customer) {
         return res.status(404).send("Customer not found");
@@ -63,7 +84,7 @@ app.get("/customers/:customerId", verifyJWT, (req, res) => {
     res.json(customer);
 });
 
-// Update customer information
+// Update customer information (Protected, admin role only)
 app.put("/customers/:customerId", verifyJWT, verifyRole(["admin"]), (req, res) => {
     const customerId = parseInt(req.params.customerId);
     const customer = customerDB[customerId];
@@ -72,18 +93,22 @@ app.put("/customers/:customerId", verifyJWT, verifyRole(["admin"]), (req, res) =
         return res.status(404).send("Customer not found");
     }
 
-    const { name, email, address, role} = req.body;
+    const { name, email, address, role } = req.body;
 
+    // Update customer details if provided
     if (typeof name !== "undefined") customer.name = name;
-    if (typeof email !== "undefined") customer.email = email;
+    if (typeof email !== "undefined") {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) return res.status(400).send("Invalid email format.");
+        customer.email = email;
+    }
     if (typeof address !== "undefined") customer.address = address;
     if (typeof role !== "undefined") customer.role = role;
 
-    customerDB[customerId] = customer;
     res.json(customer);
 });
 
-// Delete a customer
+// Delete a customer (Protected, admin role only)
 app.delete("/customers/:customerId", verifyJWT, verifyRole(["admin"]), (req, res) => {
     const customerId = parseInt(req.params.customerId);
     const customer = customerDB[customerId];
@@ -95,7 +120,7 @@ app.delete("/customers/:customerId", verifyJWT, verifyRole(["admin"]), (req, res
     customerDB.splice(customerId, 1); // Remove the customer
     customerIdCounter--; // Adjust the customer counter
 
-    // Reassign customer IDs if needed (optional, for consistency)
+    // Reassign customer IDs for consistency (optional)
     for (let i = customerId; i < customerDB.length; i++) {
         customerDB[i].customerId = i;
     }
@@ -103,11 +128,12 @@ app.delete("/customers/:customerId", verifyJWT, verifyRole(["admin"]), (req, res
     res.send("Customer deleted");
 });
 
+// JWT verification middleware
 function verifyJWT(req, res, next) {
-    const authHeaders = req.headers["authorization"];
-    const token = authHeaders && authHeaders.split(' ')[1];
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(' ')[1];
 
-    if (token == null) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
     jwt.verify(token, secret.secret, (err, user) => {
         if (err) return res.sendStatus(403);
@@ -116,6 +142,7 @@ function verifyJWT(req, res, next) {
     });
 }
 
+// Role verification middleware
 function verifyRole(allowedRoles) {
     return (req, res, next) => {
         const user = req.user;
@@ -123,6 +150,7 @@ function verifyRole(allowedRoles) {
             return res.sendStatus(403);
         }
         next();
-    }
+    };
 }
+
 app.listen(3002, () => console.log("Customer service listening on port 3002!"));
