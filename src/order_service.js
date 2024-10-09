@@ -149,5 +149,5 @@ https.createServer(sslOptions, app).listen(3003, () => {
 
 // Start the HTTPS server
 https.createServer(sslOptions, app).listen(3003, () => {
-  console.log('Local server running on https://localhost');
-}); //getting [EG:policy] warn: self-signed certificate; cannot proceed
+  console.log('Order service running on https://localhost');
+});
