@@ -78,15 +78,15 @@ Using any REST API client, send any HTTPS Request using any of the methods state
     "stock": 69
 }
 ```
-- Send the Request: Click Send in Postman. If everything is set up correctly, you should receive a 201 Created response with the newly created product.
+	- Send the Request: Click Send in Postman. If everything is set up correctly, you should receive a 201 Created response with the newly created product.
 * Get Product by ID
-- Method: GET
-- URL: https://localhost:3001/products/0 (Assuming product ID 0)
+	- Method: GET
+	- URL: https://localhost:3001/products/0 (Assuming product ID 0)
 * Update a Product
-- Method: PUT
-- URL: https://localhost:3001/products/0
-- Auth: Add the Authorization with the admin JWT.
-- Body: Select raw and JSON and use the following body:
+	- Method: PUT
+	- URL: https://localhost:3001/products/0
+	- Auth: Add the Authorization with the admin JWT.
+	- Body: Select raw and JSON and use the following body:
 ```JSON
 {
     "price": 90,
@@ -94,15 +94,15 @@ Using any REST API client, send any HTTPS Request using any of the methods state
 }
 ```
 * Delete a Product
-- Method: DELETE
-- URL: https://localhost:3001/products/0
-- Auth: Add the Authorization with the admin JWT.
+	- Method: DELETE
+	- URL: https://localhost:3001/products/0
+	- Auth: Add the Authorization with the admin JWT.
 
 2. Customer
 * Create a New Customer
-- URL: https://localhost:3002/customers
-- Method: POST
-- Body: Select raw and JSON format, then use this sample data:
+	- URL: https://localhost:3002/customers
+	- Method: POST
+	- Body: Select raw and JSON format, then use this sample data:
 ```JSON
 {
     "name": "John Doe",
@@ -113,14 +113,14 @@ Using any REST API client, send any HTTPS Request using any of the methods state
 }
 ```
 * Get Customer Details
-- URL: https://localhost:3002/customers/0
-- Method: GET
-- Auth: Add the Authorization with the admin JWT.
+	- URL: https://localhost:3002/customers/0
+	- Method: GET
+	- Auth: Add the Authorization with the admin JWT.
 * Update Customer (Requires Admin Role)
-- URL: https://localhost:3002/customers/0
-- Method: PUT
-- Auth: Add the Authorization with the admin JWT.
-- Body: Select raw and JSON format, then use this sample data:
+	- URL: https://localhost:3002/customers/0
+	- Method: PUT
+	- Auth: Add the Authorization with the admin JWT.
+	- Body: Select raw and JSON format, then use this sample data:
 ```JSON
 {
     "name": "Jane Doe",
@@ -129,9 +129,9 @@ Using any REST API client, send any HTTPS Request using any of the methods state
 }
 ```
 * Delete Customer (Requires Admin Role)
-- URL: https://localhost:3002/customers/0
-- Method: DELETE
-- Auth: Add the Authorization with the admin JWT.
+	- URL: https://localhost:3002/customers/0
+	- Method: DELETE
+	- Auth: Add the Authorization with the admin JWT.
 3. Order
 ```JSON
 {
