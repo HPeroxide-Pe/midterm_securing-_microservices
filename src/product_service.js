@@ -140,6 +140,7 @@ function verifyRole(allowedRoles) {
 const https = require("https");
 const fs = require("fs");
 
+// Load SSL certificates
 const sslOptions = {
     key: fs.readFileSync("./localhost.key"),
     cert: fs.readFileSync("./localhost.cert")
