@@ -4,14 +4,6 @@ const axios = require('axios');
 const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit"); // Add rate limiting for security
 const secret = require("../jwt-token.json");
-// const https = require("https");
-// const fs = require("fs");
-// const sslOptions = {
-//   key: fs.readFileSync("../localhost.key"),
-//   cert: fs.readFileSync("../localhost.cert"),
-//   requestCert: false,
-//   rejectUnauthorized: false
-// }
 
 app.use(express.json());
 
@@ -140,10 +132,9 @@ function verifyRole(allowedRoles) {
   };
 }
 
-app.listen(3003, () => console.log("Order service listening on port 3003!"));
+//app.listen(3003, () => console.log("Order service listening on port 3003!"));
 
 // To use HTTPS, uncomment and configure with valid certificates
-/*
 const https = require("https");
 const fs = require("fs");
 const sslOptions = {
@@ -151,11 +142,12 @@ const sslOptions = {
     cert: fs.readFileSync("../localhost.cert")
 };
 
+// Load SSL certificates
 https.createServer(sslOptions, app).listen(3003, () => {
     console.log('Secure server running on https://localhost:3003');
 });
-*/
 
-// https.createServer(sslOptions, app).listen(3003, () => {
-//   console.log('Local server running on https://localhost');
-// }); //getting [EG:policy] warn: self-signed certificate; cannot proceed
+// Start the HTTPS server
+https.createServer(sslOptions, app).listen(3003, () => {
+  console.log('Local server running on https://localhost');
+}); //getting [EG:policy] warn: self-signed certificate; cannot proceed
