@@ -67,10 +67,10 @@ node src/order_service.js
 Using any REST API client, send any HTTPS Request using any of the methods stated above, here are some test JSON inputs for the body:
 1. Product
 * Make a POST request to create a product:
-- Method: POST
-- URL: https://localhost:3001/products
-- Auth: Add the Authorization with the JWT Bearer for an admin user (secret key):
-- Body: Select raw and JSON and use the following body:
+	- Method: POST
+	- URL: https://localhost:3001/products
+	- Auth: Add the Authorization with the JWT Bearer for an admin user (secret key):
+	- Body: Select raw and JSON and use the following body:
 ```JSON
 {
     "name": "Nautilus Prime Set",
