@@ -31,8 +31,8 @@ cd midterm_securing-_microservices
 ```
 openssl req -nodes -new -x509 -keyout localhost.key -out localhost.cert -days 365
 ```
-Country Name (2 letter code): any 2 letters will do
-just press ENTER until the end
+- Country Name (2 letter code): any 2 letters will do
+- just press ENTER until the end
 
 This command will generate two files:
 - localhost.key (your private key)
