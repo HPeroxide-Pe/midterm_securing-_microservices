@@ -8,8 +8,8 @@ const secret = require("../jwt-token.json");
 app.use(express.json());
 
 // URL of customer and product services
-const customerURL = 'http://localhost:3002/customers';
-const productURL = 'http://localhost:3001/products';
+const customerURL = 'https://localhost:3002/customers';
+const productURL = 'https://localhost:3001/products';
 
 let orderIdCounter = 0; // global order counter for id
 const dataBank = []; // mock database for orders
@@ -137,17 +137,14 @@ function verifyRole(allowedRoles) {
 // To use HTTPS, uncomment and configure with valid certificates
 const https = require("https");
 const fs = require("fs");
-const sslOptions = {
-    key: fs.readFileSync("../localhost.key"),
-    cert: fs.readFileSync("../localhost.cert")
-};
 
 // Load SSL certificates
-https.createServer(sslOptions, app).listen(3003, () => {
-    console.log('Secure server running on https://localhost:3003');
-});
+const sslOptions = {
+    key: fs.readFileSync("./localhost.key"),
+    cert: fs.readFileSync("./localhost.cert")
+};
 
 // Start the HTTPS server
 https.createServer(sslOptions, app).listen(3003, () => {
-  console.log('Order service running on https://localhost');
+    console.log('Order service running on https://localhost:3003');
 });
