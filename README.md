@@ -1,4 +1,4 @@
-# IT3103 Exercise 3: Designing and Building a Microservices API 
+# IT3103 Exercise 4: Securing Microservices Architecture
 ## Microservice Overview
 1. Product Service 
 - POST /products: Add a new product.
@@ -21,17 +21,27 @@ Create the order only if the customer and product are valid.
 ## Installation and Running
 1. Clone the project repository
 ```
-git clone https://github.com/HPeroxide-Pe/exercise3_microservices.git
+git clone https://github.com/HPeroxide-Pe/midterm_securing-_microservices.git
 ```
-2. go inside the root directory
+2. Go inside the root directory
 ```
-cd exercise3_microservices
+cd midterm_securing-_microservices
 ```
-3. Use Node Package Manager to install project dependencies
+3. Generate SSL/TLS Certificates (for local development) : Use Git Bash
+```
+openssl req -nodes -new -x509 -keyout localhost.key -out localhost.cert -days 365
+```
+Country Name (2 letter code): any 2 letters will do
+just press ENTER until the end
+
+This command will generate two files:
+- localhost.key (your private key)
+- localhost.cert (your certificate)
+4. Use Node Package Manager to install project dependencies
 ```
 npm install
 ```
-4. Run each file individually in different terminal windows
+5. Run each file individually in different terminal windows
 ```
 node src/customer_service.js
 ```
@@ -43,8 +53,12 @@ node src/product_service.js
 ```
 node src/order_service.js
 ```
+6. Open Postman and create a new request.
+7. Disable SSL Certificate Verification (since you’re using a self-signed certificate):
+- Click the gear icon in the upper right of Postman.
+- Go to the General tab and toggle SSL certificate verification to OFF.
 ### Testing
-using any REST API client, send any HTTP Request using any of the methods stated above, here are some test JSON inputs for the body:
+Using any REST API client, send any HTTPS Request using any of the methods stated above, here are some test JSON inputs for the body:
 1. Product
 ```JSON
 {
