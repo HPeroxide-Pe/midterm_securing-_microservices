@@ -127,11 +127,25 @@ function verifyJWT(req, res, next) {
 function verifyRole(allowedRoles) {
     return (req, res, next) => {
         const user = req.user;
-        if (!allowedRoles.includes(user.role)) {
+        if (allowedRoles.includes(user.role)) {
             return res.sendStatus(403);
         }
         next();
     };
 }
 
-app.listen(3001, () => console.log("Product service listening on port 3001!"));
+//app.listen(3001, () => console.log("Product service listening on port 3001!"));
+
+// To use HTTPS, uncomment and configure with valid certificates
+const https = require("https");
+const fs = require("fs");
+
+const sslOptions = {
+    key: fs.readFileSync("./localhost.key"),
+    cert: fs.readFileSync("./localhost.cert")
+};
+
+// Start the HTTPS server
+https.createServer(sslOptions, app).listen(3001, () => {
+    console.log('Secure product service running on https://localhost:3001');
+});
