@@ -153,4 +153,19 @@ function verifyRole(allowedRoles) {
     };
 }
 
-app.listen(3002, () => console.log("Customer service listening on port 3002!"));
+//app.listen(3002, () => console.log("Customer service listening on port 3002!"));
+
+// To use HTTPS, uncomment and configure with valid certificates
+const https = require("https");
+const fs = require("fs");
+
+// Load SSL certificates
+const sslOptions = {
+    key: fs.readFileSync("./localhost.key"),
+    cert: fs.readFileSync("./localhost.cert")
+};
+
+// Start the HTTPS server
+https.createServer(sslOptions, app).listen(3002, () => {
+    console.log("Customer service running on https://localhost:3002");
+});
