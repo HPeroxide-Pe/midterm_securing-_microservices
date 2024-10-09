@@ -78,7 +78,7 @@ Using any REST API client, send any HTTPS Request using any of the methods state
     "stock": 69
 }
 ```
-	- Send the Request: Click Send in Postman. If everything is set up correctly, you should receive a 201 Created response with the newly created product.
+- Send the Request: Click Send in Postman. If everything is set up correctly, you should receive a 201 Created response with the newly created product.
 * Get Product by ID
 	- Method: GET
 	- URL: https://localhost:3001/products/0 (Assuming product ID 0)
