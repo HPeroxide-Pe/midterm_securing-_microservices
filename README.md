@@ -141,7 +141,7 @@ Using any REST API client, send any HTTPS Request using any of the methods state
     "role": "user",
     "password": "password123"
 }
-``````JSON
+```JSON
 {
     "name": "Bad User",
     "email": "bad@example.com",
