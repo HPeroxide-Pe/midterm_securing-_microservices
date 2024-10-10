@@ -78,6 +78,27 @@ Using any REST API client, send any HTTPS Request using any of the methods state
     "stock": 69
 }
 ```
+```JSON
+{
+    "name": "Sisig",
+    "price": 70,
+    "stock": 20
+}
+```
+```JSON
+{
+    "name": "Hotdog",
+    "price": 20,
+    "stock": 100
+}
+```
+```JSON
+{
+    "name": "Sisig with egg",
+    "price": 99,
+    "stock": 30
+}
+```
 - Send the Request: Click Send in Postman. If everything is set up correctly, you should receive a 201 Created response with the newly created product.
 * Get Product by ID
 	- Method: GET
@@ -85,7 +106,7 @@ Using any REST API client, send any HTTPS Request using any of the methods state
 * Update a Product
 	- Method: PUT
 	- URL: https://localhost:3001/products/0
-	- Auth: Add the Authorization with the admin JWT.
+	- Auth: Add the Authorization with the JWT Bearer for an admin user (secret key):
 	- Body: Select raw and JSON and use the following body:
 ```JSON
 {
@@ -95,32 +116,72 @@ Using any REST API client, send any HTTPS Request using any of the methods state
 ```
 * Delete a Product
 	- Method: DELETE
-	- URL: https://localhost:3001/products/0
-	- Auth: Add the Authorization with the admin JWT.
+	- URL: https://localhost:3001/products/2
+	- Auth: Add the Authorization with the JWT Bearer for an admin user (secret key):
 
 2. Customer
-* Create a New Customer
+* Create a New Customer with varying roles (e.g. admin, user)
 	- URL: https://localhost:3002/customers
 	- Method: POST
 	- Body: Select raw and JSON format, then use this sample data:
 ```JSON
 {
+    "name": "Saul Goodman",
+    "email": "saul.goodman@example.com",
+    "address": "852 Main St",
+    "role": "admin",
+    "password": "admin12345"
+}
+```
+```JSON
+{
     "name": "John Doe",
     "email": "john.doe@example.com",
     "address": "123 Main St",
-    "role": "admin",
+    "role": "user",
     "password": "password123"
+}
+``````JSON
+{
+    "name": "Bad User",
+    "email": "bad@example.com",
+    "address": "951 Bad St",
+    "role": "user",
+    "password": "badpassword"
+}
+```
+* Customer Login (to get JWT token)
+	- URL: https://localhost:3002/customers/login
+	- Method: POST
+	- Auth: No auth.
+	- NOTICE: Make sure to make a copy of the JWT tokens for it will be used in the following testing.
+```JSON
+{
+    "name": "Saul Goodman",
+    "pass": "admin12345"
+}
+```
+```JSON
+{
+    "name": "John Doe",
+    "pass": "password123"
+}
+```
+```JSON
+{
+    "name": "Bad User",
+    "pass": "badpassword"
 }
 ```
 * Get Customer Details
-	- URL: https://localhost:3002/customers/0
+	- URL: https://localhost:3002/customers/1
 	- Method: GET
-	- Auth: Add the Authorization with the admin JWT.
+	- Auth: Add the Authorization with the Bearer Token using admins JWT token.
 * Update Customer (Requires Admin Role)
-	- URL: https://localhost:3002/customers/0
+	- URL: https://localhost:3002/customers/2
 	- Method: PUT
-	- Auth: Add the Authorization with the admin JWT.
-	- Body: Select raw and JSON format, then use this sample data:
+	- Auth: Add the Authorization with the Bearer Token using admins JWT token.
+	- Body: Select raw and JSON format, then use this data:
 ```JSON
 {
     "name": "Jane Doe",
@@ -129,14 +190,40 @@ Using any REST API client, send any HTTPS Request using any of the methods state
 }
 ```
 * Delete Customer (Requires Admin Role)
-	- URL: https://localhost:3002/customers/0
+	- URL: https://localhost:3002/customers/2
 	- Method: DELETE
-	- Auth: Add the Authorization with the admin JWT.
+	- Auth: Add the Authorization with the Bearer Token using admins JWT token.
+	- Body: none
 3. Order
+* Create Order (for user roles only)
+	- URL: https://localhost:3003/orders
+	- Method: POST
+	- Auth: Add the Authorization with the Bearer Token using users JWT token.
+	- Body: Select raw and JSON format, then use this data:
 ```JSON
 {
-  "customerId": 0,
-  "productId": 0,
-  "quantity": 1
+  "productId": 1,
+  "quantity": 2
 }
 ```
+* Get Order Details
+	- URL: https://localhost:3003/orders/0
+	- Method: GET
+	- Auth: Add the Authorization with the Bearer Token using admins JWT token.
+	- Body: none
+* Update Order Details (for admins only)
+	- URL: https://localhost:3003/orders/0
+	- Method: PUT
+	- Auth: Add the Authorization with the Bearer Token using admins JWT token.
+	- Body: Select raw and JSON format, then use this data:
+```JSON
+{
+  "productId": 1,
+  "quantity": 5
+}
+```
+* Delete Order (for admins only)
+	- URL: https://localhost:3003/orders/0
+	- Method: DELETE
+	- Auth: Add the Authorization with the Bearer Token using admins JWT token.
+	- Body: none
