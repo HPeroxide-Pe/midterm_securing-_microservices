@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const https = require('https');
 const axios = require('axios');
 const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit"); // Add rate limiting for security
@@ -24,6 +25,11 @@ const apiLimiter = rateLimit({
 });
 app.use(apiLimiter);
 
+// An HTTPS agent that accepts self-signed certificates
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false // This allows self-signed certificates
+});
+
 // Create a new order (Protected route)
 app.post("/orders", verifyJWT, verifyRole(["user"]), async (req, res) => {
   const customerId = req.user.id;
@@ -34,15 +40,17 @@ app.post("/orders", verifyJWT, verifyRole(["user"]), async (req, res) => {
   }
 
   try {
-      // Fetch customer details
+      // Fetch customer details with custom HTTPS agent
       const customerResponse = await axios.get(`${customerURL}/${customerId}`, {
-          headers: { "Authorization": `${req.headers.authorization}` }
+        headers: { "Authorization": `${req.headers.authorization}` },
+        httpsAgent // Pass the custom HTTPS agent
       });
       const customerData = customerResponse.data;
 
-      // Fetch product details
+      // Fetch product details with custom HTTPS agent
       const productResponse = await axios.get(`${productURL}/${productId}`, {
-          headers: { "Authorization": `${req.headers.authorization}` }
+        headers: { "Authorization": `${req.headers.authorization}` },
+        httpsAgent // Pass the custom HTTPS agent
       });
       const productData = productResponse.data;
 
@@ -135,7 +143,7 @@ function verifyRole(allowedRoles) {
 //app.listen(3003, () => console.log("Order service listening on port 3003!"));
 
 // To use HTTPS, uncomment and configure with valid certificates
-const https = require("https");
+//const https = require("https");
 const fs = require("fs");
 
 // Load SSL certificates
